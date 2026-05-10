@@ -10,11 +10,10 @@ primary_region = 'ams'
   dockerfile = 'Dockerfile'
 
 [env]
-  BYBIT_BASE_URL = 'https://api.bybit.com'
-  MOCK_BYBIT = 'false'
   NODE_ENV = 'production'
   PORT = '3001'
   SUPABASE_URL = 'https://drkjkkpzujwnkghtdokz.supabase.co'
+  BYBIT_BASE_URL = 'https://api.bybit.com'
 
 [http_service]
   internal_port = 8080

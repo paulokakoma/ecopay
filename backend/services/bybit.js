@@ -6,49 +6,27 @@ class BybitService {
     this.apiKey = process.env.BYBIT_API_KEY;
     this.apiSecret = process.env.BYBIT_API_SECRET;
     this.testnet = process.env.BYBIT_TESTNET === 'true';
-    this.useMock = process.env.MOCK_BYBIT === 'true';
 
-    if (this.useMock) {
-      console.log('[Bybit] Service initialized in MOCK mode (development)');
-      this.client = null;
-    } else if (this.apiKey && this.apiSecret) {
+    if (this.apiKey && this.apiSecret) {
       this.client = new RestClientV5({
         key: this.apiKey,
         secret: this.apiSecret,
         testnet: this.testnet,
-        recv_window: 5000 // 5 segundos (recomendado Bybit)
+        recv_window: 5000
       });
-      console.log(`[Bybit] Service initialized ${this.testnet ? '(TESTNET)' : '(MAINNET)'} ${this.useMock ? '(MOCK)' : '(REAL)'}`);
+      console.log(`[Bybit] Service initialized ${this.testnet ? '(TESTNET)' : '(MAINNET)'}`);
     } else {
-      console.warn('[Bybit] API credentials not configured. Service is in read-only mode.');
+      console.warn('[Bybit] API credentials not configured.');
       this.client = null;
     }
-  }
-
-  // MOCK: Gerar ID único
-  _mockId() {
-    return 'MOCK-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
   }
 
   /**
    * Saque/Transferência para endereço externo
    */
   async createWithdrawal(address, amount, coin = 'USDT', chain = 'BNB') {
-    // MODO MOCK: Simular saque em desenvolvimento
-    if (this.useMock || !this.client) {
-      console.log(`[MOCK] Saque simulado: ${amount} ${coin} para ${address} (${chain})`);
-      return {
-        success: true,
-        data: {
-          id: this._mockId(),
-          status: 'Success',
-          coin,
-          chain,
-          amount: amount.toString(),
-          address
-        },
-        message: 'Saque simulado com sucesso (MOCK)'
-      };
+    if (!this.client) {
+      throw new Error('Bybit API não configurada');
     }
 
     try {
@@ -59,8 +37,8 @@ class BybitService {
         chain,
         address,
         amount: amount.toString(),
-        accountType: 'UNIFIED', // UTA accounts usam UNIFIED
-        forceChain: 0, // 0 = permite off-chain se for endereço Bybit
+        accountType: 'UNIFIED',
+        forceChain: 0,
       });
 
       if (response.retCode === 0) {
@@ -81,67 +59,26 @@ class BybitService {
   }
 
   /**
-   * Valida um endereço de carteira
+   * Valida um endereço de carteira (por formato)
    */
   async validateAddress(address, coin = 'USDT', chain = 'BNB') {
-    // MODO MOCK
-    if (this.useMock || !this.client) {
-      console.log(`[MOCK] Validação de endereço: ${address}`);
-      const isValid = address && address.length > 10;
-      return {
-        success: true,
-        valid: isValid,
-        data: { isValid, address, chain }
-      };
-    }
-
-    try {
-      console.log(`[Bybit] Validando endereço: ${address} (${coin} - ${chain})`);
-
-      const response = await this.client.getWithdrawalAddressList({
-        coin,
-        chain,
-        address
-      });
-
-      if (response.retCode === 0) {
-        const isValid = response.result?.rows?.some(addr => addr.address === address) || false;
-        console.log(`[Bybit] Endereço ${isValid ? 'válido' : 'inválido'}: ${address}`);
-
-        return {
-          success: true,
-          valid: isValid,
-          data: response.result
-        };
-      } else {
-        throw new Error(`Erro Bybit (${response.retCode}): ${response.retMsg}`);
-      }
-    } catch (error) {
-      console.error('[Bybit] Address Validation Error:', error.message);
-      throw error;
-    }
+    const chainPrefixes = { BNB: '0x', TRX: 'T', ETH: '0x' };
+    const prefix = chainPrefixes[chain] || '';
+    const isValid = prefix ? address.startsWith(prefix) && address.length > 10 : address.length > 10;
+    console.log(`[Bybit] Validação de endereço: ${address} (${chain}) → ${isValid ? 'válido' : 'inválido'}`);
+    return {
+      success: true,
+      valid: isValid,
+      data: { isValid, address, chain }
+    };
   }
 
   /**
    * Obtém histórico de saques
    */
   async getWithdrawalHistory(limit = 50) {
-    // MODO MOCK
-    if (this.useMock || !this.client) {
-      console.log(`[MOCK] Histórico de saques (${limit} registros)`);
-      return {
-        success: true,
-        data: [
-          {
-            id: this._mockId(),
-            coin: 'USDT',
-            amount: '2',
-            chain: 'BNB',
-            status: 'Success',
-            createdAt: new Date().toISOString()
-          }
-        ]
-      };
+    if (!this.client) {
+      throw new Error('Bybit API não configurada');
     }
 
     try {
@@ -165,14 +102,8 @@ class BybitService {
    * Obtém status de um saque específico
    */
   async getWithdrawalStatus(withdrawId) {
-    // MODO MOCK
-    if (this.useMock || !this.client) {
-      console.log(`[MOCK] Status do saque: ${withdrawId}`);
-      return {
-        success: true,
-        status: 'Success',
-        data: { id: withdrawId, status: 'Success' }
-      };
+    if (!this.client) {
+      throw new Error('Bybit API não configurada');
     }
 
     try {
@@ -200,16 +131,8 @@ class BybitService {
    * Obtém saldo da conta
    */
   async getAccountBalance() {
-    // MODO MOCK
-    if (this.useMock || !this.client) {
-      console.log('[MOCK] Saldo da conta (simulado)');
-      return {
-        success: true,
-        walletBalance: '1000.00',
-        transferBalance: '1000.00',
-        coin: 'USDT',
-        accountType: 'UNIFIED'
-      };
+    if (!this.client) {
+      throw new Error('Bybit API não configurada');
     }
 
     try {

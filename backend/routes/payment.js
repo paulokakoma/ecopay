@@ -256,25 +256,13 @@ router.get('/history/:profileId', async (req, res) => {
   }
 });
 
-// Validate wallet address using Bybit API
+// Validate wallet address (por formato)
 router.post('/validate-wallet', async (req, res) => {
   try {
     const { address, coin, chain } = req.body;
 
     if (!address) {
       return res.status(400).json({ success: false, error: 'Endereço é obrigatório' });
-    }
-
-    // Verifica se deve usar simulação
-    if (process.env.MOCK_BYBIT === 'true') {
-      // Simulação para desenvolvimento
-      const isValid = address.length > 10 && (address.startsWith('0x') || address.startsWith('T'));
-      return res.json({
-        success: true,
-        valid: isValid,
-        message: isValid ? 'Endereço válido (simulado)' : 'Endereço inválido (simulado)',
-        data: { isValid }
-      });
     }
 
     // Converter nome da rede para o padrão Bybit
