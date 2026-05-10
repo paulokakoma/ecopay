@@ -1,27 +1,30 @@
-# fly.toml app configuration file for ecopay
-app = 'ecopay-api'
-primary_region = 'jnb'
+# fly.toml app configuration file generated for ecopay on 2026-05-10T16:53:42Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'ecopay'
+primary_region = 'ams'
 
 [build]
-dockerfile = 'Dockerfile'
+  dockerfile = 'Dockerfile'
 
 [env]
-NODE_ENV = 'production'
-PORT = '3001'
-SUPABASE_URL = 'https://drkjkkpzujwnkghtdokz.supabase.co'
-BYBIT_BASE_URL = 'https://api.bybit.com'
-MOCK_BYBIT = 'false'
+  BYBIT_BASE_URL = 'https://api.bybit.com'
+  MOCK_BYBIT = 'false'
+  NODE_ENV = 'production'
+  PORT = '3001'
+  SUPABASE_URL = 'https://drkjkkpzujwnkghtdokz.supabase.co'
 
 [http_service]
-internal_port = 3001
-force_https = true
-auto_stop_machines = 'stop'
-auto_start_machines = true
-min_machines_running = 1
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
 
-[[secrets]]
-key = "SUPABASE_SERVICE_ROLE_KEY"
-[[secrets]]
-key = "BYBIT_API_KEY"
-[[secrets]]
-key = "BYBIT_API_SECRET"
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 256
